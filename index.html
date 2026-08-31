@@ -1,0 +1,57 @@
+<!-- FILE NAME: public/index.html -->
+<!-- This is the page you will see when you open your server's URL in a browser -->
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Agora Token Server - Test Page</title>
+  <style>
+    body { font-family: Arial, sans-serif; max-width: 500px; margin: 40px auto; padding: 0 20px; }
+    input { width: 100%; padding: 8px; margin: 8px 0; box-sizing: border-box; }
+    button { padding: 10px 20px; background: #2563eb; color: white; border: none; border-radius: 4px; cursor: pointer; }
+    button:hover { background: #1d4ed8; }
+    #result { margin-top: 20px; padding: 15px; background: #f3f4f6; border-radius: 4px; white-space: pre-wrap; word-break: break-all; }
+    .success { border-left: 4px solid #16a34a; }
+    .error { border-left: 4px solid #dc2626; }
+  </style>
+</head>
+<body>
+  <h2>Agora Token Server — Test Page</h2>
+  <p>If you can see this page, your server is running correctly.</p>
+
+  <label>Channel Name (type anything, e.g. "test123"):</label>
+  <input type="text" id="channelName" value="test123" />
+
+  <button onclick="generateToken()">Generate Token</button>
+
+  <div id="result"></div>
+
+  <script>
+    async function generateToken() {
+      const channelName = document.getElementById('channelName').value;
+      const resultDiv = document.getElementById('result');
+      resultDiv.className = '';
+      resultDiv.textContent = 'Requesting token...';
+
+      try {
+        const response = await fetch('/generate-token', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ channelName, uid: 0 })
+        });
+        const data = await response.json();
+
+        if (response.ok) {
+          resultDiv.className = 'success';
+          resultDiv.textContent = 'SUCCESS!\n\n' + JSON.stringify(data, null, 2);
+        } else {
+          resultDiv.className = 'error';
+          resultDiv.textContent = 'ERROR:\n\n' + JSON.stringify(data, null, 2);
+        }
+      } catch (err) {
+        resultDiv.className = 'error';
+        resultDiv.textContent = 'REQUEST FAILED: ' + err.message;
+      }
+    }
+  </script>
+</body>
+</html>
