@@ -121,63 +121,123 @@ app.get("/health", (req, res) => {
 
 app.post("/generate-token", (req, res) => {
 
-    const {
-        channelName,
-        uid
-    } = req.body;
-
-
-    if (!channelName) {
-
-        return res.status(400).json({
-
-            success: false,
-
-            error:
-                "channelName is required"
-
-        });
-
-    }
-
-
-    if (
-        !APP_ID ||
-        !APP_CERTIFICATE
-    ) {
-
-        return res.status(500).json({
-
-            success: false,
-
-            error:
-                "Server is missing Agora configuration."
-
-        });
-
-    }
-
-
-    const role =
-        RtcRole.PUBLISHER;
-
-
-    const currentTimestamp =
-        Math.floor(
-            Date.now() / 1000
-        );
-
-
-    const privilegeExpiredTs =
-        currentTimestamp +
-        TOKEN_EXPIRY_SECONDS;
-
-
-    const agoraUid =
-        Number(uid) || 0;
-
-
     try {
+
+        // --------------------------------------------------------
+        // SECURITY CHECK
+        // --------------------------------------------------------
+
+        const authHeader =
+            req.headers.authorization || "";
+
+        const expectedHeader =
+            "Bearer " +
+            RENDER_API_SECRET;
+
+        if (
+            !RENDER_API_SECRET ||
+            authHeader !== expectedHeader
+        ) {
+
+            console.warn(
+                "Unauthorized Agora token request."
+            );
+
+            return res.status(401).json({
+
+                success: false,
+
+                error:
+                    "Unauthorized."
+
+            });
+
+        }
+
+
+        // --------------------------------------------------------
+        // REQUEST DATA
+        // --------------------------------------------------------
+
+        const {
+            channelName,
+            uid
+        } = req.body;
+
+
+        // --------------------------------------------------------
+        // VALIDATE CHANNEL
+        // --------------------------------------------------------
+
+        if (!channelName) {
+
+            return res.status(400).json({
+
+                success: false,
+
+                error:
+                    "channelName is required"
+
+            });
+
+        }
+
+
+        // --------------------------------------------------------
+        // VALIDATE AGORA CONFIGURATION
+        // --------------------------------------------------------
+
+        if (
+            !APP_ID ||
+            !APP_CERTIFICATE
+        ) {
+
+            return res.status(500).json({
+
+                success: false,
+
+                error:
+                    "Server is missing Agora configuration."
+
+            });
+
+        }
+
+
+        // --------------------------------------------------------
+        // TOKEN ROLE
+        // --------------------------------------------------------
+
+        const role =
+            RtcRole.PUBLISHER;
+
+
+        // --------------------------------------------------------
+        // TOKEN EXPIRY
+        // --------------------------------------------------------
+
+        const currentTimestamp =
+            Math.floor(
+                Date.now() / 1000
+            );
+
+
+        const privilegeExpiredTs =
+            currentTimestamp +
+            TOKEN_EXPIRY_SECONDS;
+
+
+        // --------------------------------------------------------
+        // AGORA UID
+        // --------------------------------------------------------
+
+        const agoraUid =
+            Number(uid) || 0;
+
+
+        // --------------------------------------------------------
+        // GENERATE TOKEN
+        // --------------------------------------------------------
 
         const token =
             RtcTokenBuilder.buildTokenWithUid(
@@ -197,6 +257,19 @@ app.post("/generate-token", (req, res) => {
             );
 
 
+        // --------------------------------------------------------
+        // SUCCESS
+        // --------------------------------------------------------
+
+        console.log(
+            "Agora token generated:",
+            {
+                channelName: channelName,
+                uid: agoraUid
+            }
+        );
+
+
         return res.json({
 
             success: true,
@@ -213,6 +286,7 @@ app.post("/generate-token", (req, res) => {
                 privilegeExpiredTs
 
         });
+
 
     } catch (error) {
 
