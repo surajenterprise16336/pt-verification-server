@@ -9,7 +9,7 @@
   "dependencies": {
     "express": "^4.19.2",
     "cors": "^2.8.5",
-    "agora-access-token": "^2.0.4"
+    "agora-access-token": "^2.0.4",
     "firebase-admin": "^13.6.0"
   }
 }
