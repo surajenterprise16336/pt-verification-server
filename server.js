@@ -240,18 +240,18 @@ app.post("/generate-token", (req, res) => {
 // SEND FCM VERIFICATION CALL
 // ============================================================
 //
-// PHP server will call this endpoint.
+// PHP server calls this endpoint.
 //
-// IMPORTANT:
-// PHP must send:
-// Authorization: Bearer YOUR_RENDER_API_SECRET
+// Required Authorization:
 //
-// Body:
+// Authorization: Bearer RENDER_API_SECRET
+//
+// Required JSON body:
 //
 // {
 //     "deviceToken": "...",
-//     "title": "Verification Call",
-//     "body": "Padmashali Trust Admin is calling you.",
+//     "title": "Incoming Verification Call",
+//     "body": "Padmashali Trust Admin is requesting a verification call. Tap to answer.",
 //     "callId": "123",
 //     "channelName": "PT_VERIFY_...",
 //     "memberUid": "123456"
@@ -281,6 +281,10 @@ app.post(
                 !RENDER_API_SECRET ||
                 authHeader !== expectedHeader
             ) {
+
+                console.warn(
+                    "Unauthorized verification notification request."
+                );
 
                 return res.status(401).json({
 
@@ -316,7 +320,7 @@ app.post(
 
 
             // ------------------------------------------------
-            // VALIDATE
+            // VALIDATE DEVICE TOKEN
             // ------------------------------------------------
 
             if (!deviceToken) {
@@ -333,6 +337,10 @@ app.post(
             }
 
 
+            // ------------------------------------------------
+            // VALIDATE CALL ID
+            // ------------------------------------------------
+
             if (!callId) {
 
                 return res.status(400).json({
@@ -346,6 +354,10 @@ app.post(
 
             }
 
+
+            // ------------------------------------------------
+            // VALIDATE CHANNEL
+            // ------------------------------------------------
 
             if (!channelName) {
 
@@ -379,27 +391,32 @@ app.post(
             }
 
 
-            // ------------------------------------------------
-            // FCM MESSAGE
-            // ------------------------------------------------
+            // =================================================
+            // FCM DATA-ONLY MESSAGE
+            // =================================================
+            //
+            // IMPORTANT:
+            //
+            // We intentionally DO NOT use the FCM
+            // "notification" payload here.
+            //
+            // MyFirebaseMessagingService in the Member App
+            // will create the Android notification itself.
+            //
+            // This allows us to control:
+            //
+            // Notification title
+            // Notification description
+            // Notification channel
+            // Notification tap action
+            // IncomingVerificationCallActivity
+            //
+            // =================================================
 
             const message = {
 
                 token: deviceToken,
 
-
-                /*
-                |--------------------------------------------------------------------------
-                | DATA PAYLOAD
-                |--------------------------------------------------------------------------
-                |
-                | We intentionally use DATA payload for the
-                | verification call.
-                |
-                | MyFirebaseMessagingService will create the
-                | Android notification.
-                |
-                */
 
                 data: {
 
@@ -417,11 +434,11 @@ app.post(
 
                     title:
                         title ||
-                        "Padmashali Trust",
+                        "Incoming Verification Call",
 
                     body:
                         body ||
-                        "Incoming verification call."
+                        "Padmashali Trust Admin is requesting a verification call. Tap to answer."
 
                 },
 
@@ -429,26 +446,7 @@ app.post(
                 android: {
 
                     priority:
-                        "high",
-
-                    notification: {
-
-                        channelId:
-                            "VERIFICATION_CALL_CHANNEL",
-
-                        sound:
-                            "default",
-
-                        priority:
-                            "high",
-
-                        defaultVibrateTimings:
-                            true,
-
-                        defaultSound:
-                            true
-
-                    }
+                        "high"
 
                 }
 
@@ -456,7 +454,7 @@ app.post(
 
 
             // ------------------------------------------------
-            // SEND
+            // SEND FCM
             // ------------------------------------------------
 
             const response =
