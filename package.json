@@ -1,7 +1,7 @@
 {
   "name": "agora-verification-token-server",
   "version": "1.0.0",
-  "description": "Generates Agora RTC tokens for masked verification calls",
+  "description": "Padmashali Trust verification call server",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"
@@ -10,5 +10,6 @@
     "express": "^4.19.2",
     "cors": "^2.8.5",
     "agora-access-token": "^2.0.4"
+    "firebase-admin": "^13.6.0"
   }
 }
